@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply antialiased;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/95 backdrop-blur-lg;
+  }
+  
+  .gradient-bg {
+    background: linear-gradient(135deg, #0891b2 0%, #06b6d4 50%, #22d3ee 100%);
+  }
+  
+  .gradient-dark {
+    background: linear-gradient(180deg, #1a1d2e 0%, #2d1b4e 100%);
+  }
+}
