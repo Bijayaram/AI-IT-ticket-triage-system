@@ -4,20 +4,23 @@ echo IT Ticket Triage System - Startup
 echo ========================================
 echo.
 
+cd /d D:\Capstone
+set PYTHONPATH=D:\Capstone
+
 echo Starting all services...
 echo Please wait for all services to start before accessing the web apps.
 echo.
 
 echo [1/3] Starting Backend API...
-start "Backend API" cmd /k "python backend/app.py"
+start "Backend API" cmd /k "cd /d D:\Capstone && set PYTHONPATH=D:\Capstone && uvicorn backend.app:app --host 0.0.0.0 --port 8000"
 timeout /t 5 /nobreak >nul
 
 echo [2/3] Starting Customer Portal...
-start "Customer Portal" cmd /k "streamlit run customer_portal/streamlit_app.py --server.port 8501"
+start "Customer Portal" cmd /k "cd /d D:\Capstone && streamlit run customer_portal/streamlit_app.py --server.port 8501"
 timeout /t 3 /nobreak >nul
 
 echo [3/3] Starting Manager Dashboard...
-start "Manager Dashboard" cmd /k "streamlit run manager_dashboard/streamlit_dashboard.py --server.port 8502"
+start "Manager Dashboard" cmd /k "cd /d D:\Capstone && streamlit run manager_dashboard/streamlit_dashboard.py --server.port 8502"
 
 echo.
 echo ========================================
@@ -25,6 +28,7 @@ echo All services started!
 echo ========================================
 echo.
 echo Access points:
+echo   Backend API:       http://localhost:8000
 echo   Customer Portal:   http://localhost:8501
 echo   Manager Dashboard: http://localhost:8502
 echo   API Documentation: http://localhost:8000/docs
