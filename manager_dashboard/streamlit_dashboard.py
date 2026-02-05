@@ -1,6 +1,6 @@
 """
 Manager Dashboard - Streamlit App #2
-Modern, professional dashboard for ticket management and analytics.
+Professional dashboard inspired by Pandora design - clean, symmetrical, data-focused.
 """
 import streamlit as st
 import requests
@@ -19,339 +19,325 @@ MANAGER_PASSWORD = os.getenv("MANAGER_PASSWORD", "admin123")
 
 # Page config
 st.set_page_config(
-    page_title="IT Manager Dashboard",
+    page_title="Support Dashboard",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Modern Professional CSS
+# Professional Pandora-inspired CSS
 st.markdown("""
     <style>
     /* Import professional font */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     
     * {
         font-family: 'Inter', sans-serif;
     }
     
-    /* Hide Streamlit branding */
+    /* Hide Streamlit elements */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* Professional dark gradient background */
+    /* Dark professional background like Pandora */
     .stApp {
-        background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 50%, #db2777 100%);
+        background: linear-gradient(180deg, #1a1d2e 0%, #2d1b4e 100%);
     }
     
-    /* Main container with modern card style */
+    /* Main container - full width, minimal padding */
     .main .block-container {
-        background: rgba(255, 255, 255, 0.98);
-        backdrop-filter: blur(20px);
-        border-radius: 24px;
-        padding: 2.5rem;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        padding: 1.5rem 2rem 2rem 2rem;
+        max-width: 100%;
+    }
+    
+    /* Dashboard header */
+    .dashboard-header {
+        color: white;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+    }
+    
+    /* White metric cards like Pandora */
+    .metric-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        height: 100%;
+        position: relative;
+    }
+    
+    .metric-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .metric-icon.purple { background: #8b5cf6; }
+    .metric-icon.blue { background: #3b82f6; }
+    .metric-icon.green { background: #10b981; }
+    .metric-icon.orange { background: #f59e0b; }
+    .metric-icon.red { background: #ef4444; }
+    
+    .metric-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .metric-value {
+        color: #111827;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .metric-change {
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .metric-change.positive { color: #10b981; }
+    .metric-change.negative { color: #ef4444; }
+    
+    .metric-info {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        color: #d1d5db;
+        cursor: pointer;
+    }
+    
+    /* Chart container */
+    .chart-container {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         margin-top: 1.5rem;
     }
     
-    /* Professional header */
-    .main-header {
-        font-size: 3.5rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 50%, #db2777 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-align: center;
-        margin-bottom: 0.5rem;
-        animation: fadeInDown 0.8s ease-out;
-        letter-spacing: -1px;
-    }
-    
-    .sub-header {
-        text-align: center;
-        color: #64748b;
-        font-size: 1.2rem;
-        margin-bottom: 2rem;
-        font-weight: 500;
-    }
-    
-    /* Modern tabs with professional look */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 12px;
-        background: transparent;
-        padding: 1rem 0;
-    }
-    
-    .stTabs [data-baseweb="tab"] {
-        background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
-        color: white;
-        border-radius: 16px;
-        padding: 14px 28px;
+    .chart-title {
+        color: #111827;
+        font-size: 1.125rem;
         font-weight: 700;
-        font-size: 1.05rem;
-        border: none;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+        margin-bottom: 1rem;
     }
     
-    .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
-        box-shadow: 0 8px 20px rgba(124, 58, 237, 0.5);
-        transform: translateY(-3px);
-    }
-    
-    .stTabs [data-baseweb="tab"]:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(30, 58, 138, 0.4);
-    }
-    
-    /* Professional metric cards */
+    /* Streamlit metric styling override */
     [data-testid="stMetricValue"] {
-        font-size: 2.5rem;
-        font-weight: 800;
-        color: #1e293b;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #111827;
     }
     
     [data-testid="stMetricLabel"] {
-        font-size: 1rem;
-        font-weight: 600;
-        color: #64748b;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6b7280;
     }
     
-    [data-testid="stMetricDelta"] {
-        font-size: 0.9rem;
+    [data-testid="metric-container"] {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Clean tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 0;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 0.25rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        background: transparent;
+        color: rgba(255, 255, 255, 0.7);
+        border-radius: 10px;
+        padding: 0.75rem 1.5rem;
         font-weight: 600;
+        border: none;
+        transition: all 0.2s ease;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: white;
+        color: #1a1d2e;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Professional buttons */
+    .stButton > button {
+        background: white;
+        color: #1a1d2e;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+        border: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+    }
+    
+    .stButton > button:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-1px);
     }
     
     /* Professional input fields */
     .stTextInput > div > div > input,
     .stTextArea > div > div > textarea,
     .stSelectbox > div > div > select {
-        border-radius: 12px;
-        border: 2px solid #e2e8f0;
-        padding: 12px 16px;
-        font-size: 1rem;
-        transition: all 0.3s ease;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
         background: white;
     }
     
-    .stTextInput > div > div > input:focus,
-    .stTextArea > div > div > textarea:focus {
-        border-color: #7c3aed;
-        box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
-    }
-    
-    /* Professional buttons */
-    .stButton > button {
-        background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
-        color: white;
-        border-radius: 12px;
-        padding: 12px 32px;
-        font-weight: 700;
-        font-size: 1rem;
-        border: none;
-        box-shadow: 0 4px 16px rgba(30, 58, 138, 0.3);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        width: 100%;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .stButton > button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 24px rgba(30, 58, 138, 0.4);
-        background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
-    }
-    
-    /* Professional card design */
-    .approval-card {
-        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-        border: none;
-        padding: 2rem;
-        border-radius: 20px;
-        margin-bottom: 2rem;
-        box-shadow: 0 8px 24px rgba(251, 191, 36, 0.3);
-        transition: all 0.3s ease;
-    }
-    
-    .approval-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 32px rgba(251, 191, 36, 0.4);
-    }
-    
-    /* Professional expander */
+    /* Clean expander */
     .streamlit-expanderHeader {
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        border-radius: 16px;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        font-weight: 600;
+        padding: 1rem;
+    }
+    
+    /* Approval card - warning style */
+    .approval-card {
+        background: white;
+        border-left: 4px solid #f59e0b;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .approval-card-header {
+        color: #111827;
+        font-size: 1.25rem;
         font-weight: 700;
-        font-size: 1.1rem;
-        padding: 1.2rem;
-        border: 2px solid #e2e8f0;
-        transition: all 0.3s ease;
-    }
-    
-    .streamlit-expanderHeader:hover {
-        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-        border-color: #7c3aed;
-        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
-        transform: translateX(4px);
-    }
-    
-    /* Status indicators with professional styling */
-    .status-badge {
-        padding: 0.6rem 1.2rem;
-        border-radius: 24px;
-        font-weight: 700;
-        font-size: 0.85rem;
-        display: inline-block;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-    
-    /* Professional alerts */
-    .stSuccess, .stError, .stWarning, .stInfo {
-        border-radius: 16px;
-        padding: 1.2rem;
-        border: none;
-        font-weight: 500;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin-bottom: 0.5rem;
     }
     
     /* Form styling */
     .stForm {
-        background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
-        padding: 2rem;
-        border-radius: 20px;
-        border: 2px solid #e5e7eb;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+        background: #f9fafb;
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
     }
     
-    /* Login container */
-    .login-container {
-        max-width: 500px;
-        margin: 4rem auto;
-        padding: 3rem;
-        background: white;
-        border-radius: 24px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    /* Status badges */
+    .status-badge {
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        display: inline-block;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
     
-    /* Professional charts */
-    .js-plotly-plot {
-        border-radius: 16px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    }
+    .status-new { background: #dbeafe; color: #1e40af; }
+    .status-triaged { background: #e9d5ff; color: #7c3aed; }
+    .status-drafted { background: #fef3c7; color: #d97706; }
+    .status-pending_approval { background: #fed7aa; color: #ea580c; }
+    .status-approved { background: #d1fae5; color: #047857; }
+    .status-sent { background: #d1fae5; color: #059669; }
+    .status-rejected { background: #fee2e2; color: #dc2626; }
     
-    /* Animations */
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    
-    @keyframes fadeInDown {
-        from {
-            opacity: 0;
-            transform: translateY(-30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    @keyframes slideInRight {
-        from {
-            opacity: 0;
-            transform: translateX(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-    
-    /* Checkbox styling */
-    .stCheckbox {
-        padding: 0.5rem 0;
-    }
-    
-    /* Professional divider */
-    hr {
-        margin: 2rem 0;
+    /* Success/Error alerts */
+    .stSuccess, .stError, .stWarning, .stInfo {
+        border-radius: 8px;
+        padding: 1rem;
         border: none;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+    }
+    
+    /* Remove padding from columns for tighter layout */
+    [data-testid="column"] {
+        padding: 0 0.5rem;
+    }
+    
+    [data-testid="column"]:first-child {
+        padding-left: 0;
+    }
+    
+    [data-testid="column"]:last-child {
+        padding-right: 0;
+    }
+    
+    /* Hide empty space */
+    .element-container:has(> .stMarkdown:empty) {
+        display: none;
     }
     </style>
 """, unsafe_allow_html=True)
 
 
 def check_authentication():
-    """Professional login page"""
+    """Professional login"""
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
     
     if not st.session_state.authenticated:
-        st.markdown('<p class="main-header">🔐 Manager Dashboard</p>', unsafe_allow_html=True)
-        st.markdown('<p class="sub-header">Secure Access Portal</p>', unsafe_allow_html=True)
-        
-        col1, col2, col3 = st.columns([1, 2, 1])
+        col1, col2, col3 = st.columns([1, 1, 1])
         
         with col2:
             st.markdown("<br><br>", unsafe_allow_html=True)
+            st.markdown("""
+                <div style="background: white; padding: 3rem; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);">
+                    <h2 style="color: #1a1d2e; text-align: center; margin-bottom: 2rem;">🔐 Manager Login</h2>
+                </div>
+            """, unsafe_allow_html=True)
             
-            with st.container():
-                st.markdown("### 🔑 Authentication Required")
-                st.markdown("<br>", unsafe_allow_html=True)
-                
-                password = st.text_input(
-                    "Manager Password",
-                    type="password",
-                    placeholder="Enter your secure password"
-                )
-                
-                st.markdown("<br>", unsafe_allow_html=True)
-                
-                if st.button("🚀 Access Dashboard"):
-                    if password == MANAGER_PASSWORD:
-                        st.session_state.authenticated = True
-                        st.success("✅ Authentication successful!")
-                        st.rerun()
-                    else:
-                        st.error("❌ Invalid credentials. Access denied.")
-                
-                st.markdown("<br>", unsafe_allow_html=True)
-                st.info("💡 **Default Password:** admin123")
+            password = st.text_input("Password", type="password", placeholder="Enter manager password")
+            
+            if st.button("Access Dashboard", use_container_width=True):
+                if password == MANAGER_PASSWORD:
+                    st.session_state.authenticated = True
+                    st.success("✅ Access granted")
+                    st.rerun()
+                else:
+                    st.error("❌ Invalid password")
+            
+            st.info("💡 Default: admin123")
         
         st.stop()
 
 
 def main():
-    """Main professional dashboard"""
+    """Main dashboard"""
     check_authentication()
     
-    st.markdown('<p class="main-header">📊 IT Manager Dashboard</p>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-header">Real-time Ticket Management & Analytics</p>', unsafe_allow_html=True)
-    
-    # Logout button with modern styling
-    col1, col2 = st.columns([5, 1])
+    # Header with logout
+    col1, col2 = st.columns([6, 1])
+    with col1:
+        st.markdown('<h1 class="dashboard-header">Dashboard</h1>', unsafe_allow_html=True)
     with col2:
         if st.button("🚪 Logout"):
             st.session_state.authenticated = False
             st.rerun()
     
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # Professional navigation tabs
+    # Navigation tabs
     tab1, tab2, tab3, tab4 = st.tabs([
-        "📈 Overview",
+        "📊 Overview",
         "⏳ Approvals",
-        "🎫 All Tickets",
-        "📊 Analytics"
+        "🎫 Tickets",
+        "📈 Analytics"
     ])
     
     with tab1:
@@ -368,134 +354,145 @@ def main():
 
 
 def overview_page():
-    """Professional overview with modern KPIs"""
-    st.markdown("### 📊 Real-Time Dashboard")
-    st.markdown("<br>", unsafe_allow_html=True)
-    
+    """Professional overview with Pandora-style layout"""
     try:
         response = requests.get(f"{BACKEND_URL}/dashboard/summary")
         if response.status_code == 200:
             summary = response.json()
             
-            # Modern KPI Cards
+            # Top metrics row - 5 cards
             col1, col2, col3, col4, col5 = st.columns(5)
             
             with col1:
-                st.metric(
-                    "📋 Total Tickets",
-                    summary["total_tickets"],
-                    delta=None,
-                    help="Total tickets in the system"
-                )
+                st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-icon purple">💼</div>
+                        <div class="metric-label">Total Tickets</div>
+                        <div class="metric-value">{summary["total_tickets"]:,}</div>
+                    </div>
+                """, unsafe_allow_html=True)
             
             with col2:
-                st.metric(
-                    "🔓 Open Tickets",
-                    summary["open_tickets"],
-                    delta=f"{summary['open_tickets']} active",
-                    help="Currently open tickets"
-                )
+                st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-icon blue">📞</div>
+                        <div class="metric-label">Open Tickets</div>
+                        <div class="metric-value">{summary["open_tickets"]:,}</div>
+                        <div class="metric-change positive">↑ Active</div>
+                    </div>
+                """, unsafe_allow_html=True)
             
             with col3:
-                st.metric(
-                    "🔴 Critical",
-                    summary["critical_count"],
-                    delta="High Priority" if summary["critical_count"] > 0 else "None",
-                    delta_color="inverse",
-                    help="High priority tickets"
-                )
+                st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-icon red">🔴</div>
+                        <div class="metric-label">Critical Tickets</div>
+                        <div class="metric-value">{summary["critical_count"]:,}</div>
+                        <div class="metric-change {'negative' if summary['critical_count'] > 0 else 'positive'}">
+                            {'⚠️ High Priority' if summary['critical_count'] > 0 else '✓ None'}
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
             
             with col4:
-                st.metric(
-                    "⏳ Pending",
-                    summary["pending_approval_count"],
-                    delta="Action Required" if summary["pending_approval_count"] > 0 else "Clear",
-                    delta_color="inverse",
-                    help="Tickets awaiting approval"
-                )
+                st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-icon orange">⏳</div>
+                        <div class="metric-label">Pending Approval</div>
+                        <div class="metric-value">{summary["pending_approval_count"]:,}</div>
+                        <div class="metric-change {'negative' if summary['pending_approval_count'] > 0 else 'positive'}">
+                            {'🔔 Action Required' if summary['pending_approval_count'] > 0 else '✓ Clear'}
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
             
             with col5:
-                avg_time = summary.get("avg_response_time_hours")
-                if avg_time:
-                    st.metric(
-                        "⚡ Avg Time",
-                        f"{avg_time:.1f}h",
-                        delta=f"{avg_time:.1f}h" if avg_time < 24 else "Slow",
-                        delta_color="normal" if avg_time < 24 else "inverse",
-                        help="Average response time"
-                    )
-                else:
-                    st.metric("⚡ Avg Time", "N/A", help="No data yet")
+                avg_time = summary.get("avg_response_time_hours", 0)
+                st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-icon green">⚡</div>
+                        <div class="metric-label">Avg Response Time</div>
+                        <div class="metric-value">{avg_time:.1f}h</div>
+                        <div class="metric-change {'positive' if avg_time < 24 else 'negative'}">
+                            {'✓ Fast' if avg_time < 24 else '⚠️ Slow'}
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
             
-            st.markdown("<br><br>", unsafe_allow_html=True)
-            
-            # Professional Charts
-            st.markdown("### 📊 Ticket Distribution Analytics")
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            col1, col2 = st.columns(2)
+            # Charts row
+            col1, col2 = st.columns([2, 1])
             
             with col1:
-                # Department distribution with modern styling
+                # Tickets by Department (Bar chart like Pandora)
                 if summary["tickets_by_queue"]:
+                    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+                    st.markdown('<div class="chart-title">Ticket Volume by Department</div>', unsafe_allow_html=True)
+                    
                     df_queue = pd.DataFrame(
                         list(summary["tickets_by_queue"].items()),
                         columns=["Department", "Count"]
                     )
+                    
                     fig = px.bar(
                         df_queue,
                         x="Department",
                         y="Count",
-                        title="<b>Tickets by Department</b>",
                         color="Count",
-                        color_continuous_scale="Viridis",
+                        color_continuous_scale=[[0, "#c4b5fd"], [0.5, "#a78bfa"], [1, "#8b5cf6"]],
                         template="plotly_white"
                     )
+                    
                     fig.update_layout(
-                        title_font_size=18,
-                        title_font_color="#1e293b",
-                        title_font_family="Inter",
-                        font=dict(family="Inter", size=12),
-                        plot_bgcolor="rgba(0,0,0,0)",
-                        paper_bgcolor="rgba(0,0,0,0)",
                         showlegend=False,
-                        margin=dict(t=50, b=50, l=50, r=50)
+                        plot_bgcolor="white",
+                        paper_bgcolor="white",
+                        font=dict(family="Inter", size=12, color="#6b7280"),
+                        xaxis=dict(showgrid=False, title=""),
+                        yaxis=dict(showgrid=True, gridcolor="#f3f4f6", title=""),
+                        margin=dict(t=10, b=40, l=40, r=10),
+                        height=300
                     )
-                    fig.update_traces(marker_line_color="white", marker_line_width=2)
+                    
+                    fig.update_traces(marker_line_width=0)
                     st.plotly_chart(fig, use_container_width=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
             
             with col2:
-                # Status distribution with modern pie chart
+                # Status Distribution (Donut chart)
                 if summary["tickets_by_status"]:
+                    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+                    st.markdown('<div class="chart-title">Status Distribution</div>', unsafe_allow_html=True)
+                    
                     df_status = pd.DataFrame(
                         list(summary["tickets_by_status"].items()),
                         columns=["Status", "Count"]
                     )
+                    
                     fig = px.pie(
                         df_status,
                         values="Count",
                         names="Status",
-                        title="<b>Tickets by Status</b>",
-                        color_discrete_sequence=px.colors.qualitative.Set3,
-                        template="plotly_white",
-                        hole=0.4
+                        hole=0.6,
+                        color_discrete_sequence=["#8b5cf6", "#3b82f6", "#10b981", "#f59e0b", "#ef4444"]
                     )
+                    
                     fig.update_layout(
-                        title_font_size=18,
-                        title_font_color="#1e293b",
-                        title_font_family="Inter",
-                        font=dict(family="Inter", size=12),
-                        plot_bgcolor="rgba(0,0,0,0)",
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        margin=dict(t=50, b=50, l=50, r=50)
+                        showlegend=True,
+                        legend=dict(orientation="v", yanchor="middle", y=0.5, xanchor="left", x=1.05),
+                        plot_bgcolor="white",
+                        paper_bgcolor="white",
+                        font=dict(family="Inter", size=11, color="#6b7280"),
+                        margin=dict(t=10, b=10, l=10, r=80),
+                        height=300
                     )
-                    fig.update_traces(textposition='inside', textinfo='percent+label')
+                    
+                    fig.update_traces(textposition='inside', textinfo='percent', textfont_size=11)
                     st.plotly_chart(fig, use_container_width=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
             
-            # Time series with professional styling
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("### 📈 Ticket Trends Over Time")
-            st.markdown("<br>", unsafe_allow_html=True)
+            # Time series chart (full width)
+            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+            st.markdown('<div class="chart-title">Ticket Trends - Last 30 Days</div>', unsafe_allow_html=True)
             
             timeseries_response = requests.get(f"{BACKEND_URL}/dashboard/timeseries?days=30")
             if timeseries_response.status_code == 200:
@@ -504,62 +501,53 @@ def overview_page():
                     df_ts = pd.DataFrame(timeseries)
                     
                     fig = go.Figure()
+                    
                     fig.add_trace(go.Scatter(
                         x=df_ts["date"],
                         y=df_ts["count"],
-                        mode="lines+markers",
-                        name="Total Tickets",
-                        line=dict(color="#1e3a8a", width=3),
-                        marker=dict(size=8, symbol="circle"),
+                        name="Total",
+                        line=dict(color="#10b981", width=3),
+                        mode="lines",
                         fill='tozeroy',
-                        fillcolor="rgba(30, 58, 138, 0.1)"
+                        fillcolor="rgba(16, 185, 129, 0.1)"
                     ))
+                    
                     fig.add_trace(go.Scatter(
                         x=df_ts["date"],
                         y=df_ts["critical_count"],
-                        mode="lines+markers",
-                        name="Critical Tickets",
-                        line=dict(color="#db2777", width=3),
-                        marker=dict(size=8, symbol="diamond")
+                        name="Critical",
+                        line=dict(color="#8b5cf6", width=3),
+                        mode="lines"
                     ))
+                    
                     fig.update_layout(
-                        title="<b>Ticket Volume - Last 30 Days</b>",
-                        title_font_size=18,
-                        title_font_color="#1e293b",
-                        title_font_family="Inter",
-                        xaxis_title="Date",
-                        yaxis_title="Number of Tickets",
-                        font=dict(family="Inter", size=12),
-                        template="plotly_white",
                         hovermode="x unified",
-                        plot_bgcolor="rgba(0,0,0,0)",
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        legend=dict(
-                            orientation="h",
-                            yanchor="bottom",
-                            y=1.02,
-                            xanchor="right",
-                            x=1
-                        ),
-                        margin=dict(t=80, b=60, l=60, r=60)
+                        plot_bgcolor="white",
+                        paper_bgcolor="white",
+                        font=dict(family="Inter", size=12, color="#6b7280"),
+                        xaxis=dict(showgrid=False, title=""),
+                        yaxis=dict(showgrid=True, gridcolor="#f3f4f6", title="Tickets"),
+                        legend=dict(orientation="h", yanchor="top", y=1.1, xanchor="left", x=0),
+                        margin=dict(t=40, b=40, l=60, r=20),
+                        height=300
                     )
+                    
                     st.plotly_chart(fig, use_container_width=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
         
         else:
-            st.error("❌ Failed to load dashboard data")
+            st.error("Failed to load dashboard")
     
     except requests.exceptions.ConnectionError:
-        st.error("❌ Cannot connect to the backend server. Please ensure it's running.")
+        st.error("❌ Cannot connect to backend server")
     except Exception as e:
         st.error(f"❌ Error: {str(e)}")
 
 
 def approvals_page():
     """Professional approvals interface"""
-    st.markdown("### ⏳ Pending Critical Ticket Approvals")
-    st.write("Review and approve AI-generated responses for critical priority tickets.")
-    
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("### ⏳ Pending Critical Approvals")
     
     try:
         response = requests.get(f"{BACKEND_URL}/approvals/pending")
@@ -567,123 +555,72 @@ def approvals_page():
             pending = response.json()
             
             if not pending:
-                st.success("🎉 **All caught up!** No tickets pending approval.")
-                st.balloons()
+                st.success("✅ All clear! No pending approvals.")
                 return
             
-            st.warning(f"⚠️ **{len(pending)} ticket(s)** require your immediate attention")
-            
+            st.warning(f"⚠️ {len(pending)} ticket(s) require approval")
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # Display each pending ticket with professional design
             for item in pending:
                 ticket_id = item["ticket_id"]
                 
                 st.markdown(f"""
-                <div class="approval-card">
-                    <h2 style="margin: 0; color: #92400e;">🎫 Ticket #{ticket_id}</h2>
-                    <h3 style="margin: 0.5rem 0 0 0; color: #78350f;">{item['subject']}</h3>
-                </div>
+                    <div class="approval-card">
+                        <div class="approval-card-header">🎫 Ticket #{ticket_id}: {item['subject']}</div>
+                    </div>
                 """, unsafe_allow_html=True)
                 
-                # Get full ticket details
                 detail_response = requests.get(f"{BACKEND_URL}/tickets/{ticket_id}")
                 if detail_response.status_code == 200:
                     ticket = detail_response.json()
                     
-                    # Key metrics
+                    # Metrics
                     col1, col2, col3, col4 = st.columns(4)
                     with col1:
-                        st.metric("🏢 Department", item["predicted_queue"])
+                        st.metric("Department", item["predicted_queue"])
                     with col2:
-                        st.metric("🔥 Critical Score", f"{item['critical_prob']:.0%}")
+                        st.metric("Critical Score", f"{item['critical_prob']:.0%}")
                     with col3:
-                        st.metric("👤 Submitter", item["submitter_email"].split('@')[0])
+                        st.metric("From", item["submitter_email"].split('@')[0])
                     with col4:
                         created = datetime.fromisoformat(item["created_at"].replace('Z', '+00:00'))
-                        hours_ago = (datetime.now(created.tzinfo) - created).total_seconds() / 3600
-                        st.metric("⏱️ Submitted", f"{hours_ago:.1f}h ago")
-                    
-                    st.markdown("<br>", unsafe_allow_html=True)
+                        hours = (datetime.now(created.tzinfo) - created).total_seconds() / 3600
+                        st.metric("Age", f"{hours:.1f}h ago")
                     
                     # Original ticket
-                    with st.expander("📧 Original Ticket", expanded=True):
-                        st.markdown(f"**From:** {ticket['submitter_name']} ({ticket['submitter_email']})")
-                        st.markdown(f"**Subject:** {ticket['subject']}")
-                        st.markdown("**Message:**")
+                    with st.expander("📧 Original Message", expanded=True):
+                        st.write(f"**From:** {ticket['submitter_name']} ({ticket['submitter_email']})")
+                        st.write(f"**Subject:** {ticket['subject']}")
                         st.info(ticket['body'])
                     
-                    # AI Draft response
+                    # Draft response
                     if ticket.get('responses') and len(ticket['responses']) > 0:
                         response_data = ticket['responses'][0]
                         
-                        with st.expander("🤖 AI-Generated Draft Response", expanded=True):
+                        with st.expander("🤖 AI Draft Response", expanded=True):
                             col1, col2 = st.columns([3, 1])
                             with col1:
-                                st.markdown(f"**Language:** {response_data.get('draft_language', 'en').upper()}")
+                                st.write(f"**Subject:** {response_data.get('draft_subject')}")
                             with col2:
-                                confidence = response_data.get('draft_confidence', 0)
-                                color = "green" if confidence > 0.8 else "orange" if confidence > 0.6 else "red"
-                                st.markdown(f"**Confidence:** <span style='color: {color}; font-weight: bold;'>{confidence:.0%}</span>", unsafe_allow_html=True)
-                            
-                            st.markdown(f"**Subject:** {response_data.get('draft_subject')}")
-                            st.markdown("**Response Body:**")
+                                st.write(f"**Confidence:** {response_data.get('draft_confidence', 0):.0%}")
                             st.success(response_data.get('draft_body'))
-                        
-                        # RAG context
-                        if response_data.get('retrieval_context'):
-                            with st.expander("🔍 Similar Historical Tickets (RAG Context)"):
-                                import json
-                                context = json.loads(response_data['retrieval_context'])
-                                for i, ctx in enumerate(context, 1):
-                                    st.markdown(f"**{i}. {ctx['subject']}**")
-                                    st.write(f"**Answer:** {ctx['answer']}")
-                                    if i < len(context):
-                                        st.markdown("---")
                     
-                    st.markdown("<br>", unsafe_allow_html=True)
-                    
-                    # Approval actions
-                    st.markdown("### 🎯 Decision Required")
-                    
+                    # Actions
                     col1, col2 = st.columns(2)
                     
                     with col1:
-                        with st.form(f"approve_form_{ticket_id}"):
-                            st.markdown("#### ✅ Approve & Send Response")
+                        with st.form(f"approve_{ticket_id}"):
+                            st.subheader("✅ Approve")
+                            approver_name = st.text_input("Your Name", "Manager", key=f"a_name_{ticket_id}")
+                            approver_email = st.text_input("Your Email", "manager@company.com", key=f"a_email_{ticket_id}")
+                            notes = st.text_input("Notes (optional)", key=f"a_notes_{ticket_id}")
                             
-                            approver_name = st.text_input("Your Name", value="Manager", key=f"name_approve_{ticket_id}")
-                            approver_email = st.text_input("Your Email", value="manager@company.com", key=f"email_approve_{ticket_id}")
-                            
-                            edit_response = st.checkbox("✏️ Edit response before sending", key=f"edit_{ticket_id}")
-                            
-                            edited_subject = None
-                            edited_body = None
-                            
-                            if edit_response and ticket.get('responses'):
-                                st.markdown("**Edit Response:**")
-                                edited_subject = st.text_input(
-                                    "Subject",
-                                    value=ticket['responses'][0].get('draft_subject', ''),
-                                    key=f"subj_{ticket_id}"
-                                )
-                                edited_body = st.text_area(
-                                    "Body",
-                                    value=ticket['responses'][0].get('draft_body', ''),
-                                    height=200,
-                                    key=f"body_{ticket_id}"
-                                )
-                            
-                            notes = st.text_input("Approval Notes (optional)", key=f"notes_approve_{ticket_id}")
-                            
-                            if st.form_submit_button("✅ Approve & Send to Customer", use_container_width=True):
+                            if st.form_submit_button("Approve & Send", use_container_width=True):
                                 approval_data = {
                                     "approver_name": approver_name,
                                     "approver_email": approver_email,
                                     "decision": "APPROVED",
-                                    "decision_notes": notes,
-                                    "edited_subject": edited_subject if edit_response else None,
-                                    "edited_body": edited_body if edit_response else None
+                                    "decision_notes": notes
                                 }
                                 
                                 approve_response = requests.post(
@@ -692,35 +629,27 @@ def approvals_page():
                                 )
                                 
                                 if approve_response.status_code == 200:
-                                    st.success("✅ Ticket approved and response sent!")
-                                    st.balloons()
+                                    st.success("✅ Approved!")
                                     st.rerun()
                                 else:
-                                    st.error(f"❌ Failed to approve: {approve_response.text}")
+                                    st.error(f"Failed: {approve_response.text}")
                     
                     with col2:
-                        with st.form(f"reject_form_{ticket_id}"):
-                            st.markdown("#### ❌ Reject / Request Revision")
+                        with st.form(f"reject_{ticket_id}"):
+                            st.subheader("❌ Reject")
+                            approver_name = st.text_input("Your Name", "Manager", key=f"r_name_{ticket_id}")
+                            approver_email = st.text_input("Your Email", "manager@company.com", key=f"r_email_{ticket_id}")
+                            reject_reason = st.text_area("Reason (required)", key=f"r_reason_{ticket_id}")
                             
-                            approver_name = st.text_input("Your Name", value="Manager", key=f"name_reject_{ticket_id}")
-                            approver_email = st.text_input("Your Email", value="manager@company.com", key=f"email_reject_{ticket_id}")
-                            
-                            reject_notes = st.text_area(
-                                "Rejection Reason (required)",
-                                placeholder="Explain why this response needs to be revised...",
-                                key=f"reject_notes_{ticket_id}",
-                                height=150
-                            )
-                            
-                            if st.form_submit_button("❌ Reject & Request Revision", use_container_width=True):
-                                if not reject_notes:
-                                    st.error("⚠️ Please provide a reason for rejection")
+                            if st.form_submit_button("Reject", use_container_width=True):
+                                if not reject_reason:
+                                    st.error("Reason required")
                                 else:
                                     reject_data = {
                                         "approver_name": approver_name,
                                         "approver_email": approver_email,
                                         "decision": "REJECTED",
-                                        "decision_notes": reject_notes
+                                        "decision_notes": reject_reason
                                     }
                                     
                                     reject_response = requests.post(
@@ -729,51 +658,42 @@ def approvals_page():
                                     )
                                     
                                     if reject_response.status_code == 200:
-                                        st.success("✅ Ticket rejected. Agent will revise the response.")
+                                        st.success("✅ Rejected")
                                         st.rerun()
                                     else:
-                                        st.error(f"❌ Failed to reject: {reject_response.text}")
+                                        st.error(f"Failed: {reject_response.text}")
                     
                     st.markdown("---")
-                    st.markdown("<br>", unsafe_allow_html=True)
         
         else:
-            st.error("❌ Failed to load pending approvals")
+            st.error("Failed to load approvals")
     
-    except requests.exceptions.ConnectionError:
-        st.error("❌ Cannot connect to the backend server")
     except Exception as e:
-        st.error(f"❌ Error: {str(e)}")
+        st.error(f"Error: {str(e)}")
 
 
 def all_tickets_page():
-    """Professional all tickets view"""
-    st.markdown("### 🎫 All Tickets Management")
-    st.markdown("<br>", unsafe_allow_html=True)
+    """Professional tickets view"""
+    st.markdown("### 🎫 All Tickets")
     
-    # Professional filters
+    # Filters
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         status_filter = st.selectbox(
-            "📊 Status Filter",
+            "Status",
             ["All", "NEW", "TRIAGED", "DRAFTED", "PENDING_APPROVAL", "APPROVED", "SENT", "REJECTED"]
         )
     
     with col2:
-        queue_filter = st.text_input("🏢 Department", placeholder="e.g., Network")
+        queue_filter = st.text_input("Department")
     
     with col3:
-        critical_filter = st.selectbox(
-            "⚡ Priority",
-            ["All", "Critical Only", "Non-Critical Only"]
-        )
+        critical_filter = st.selectbox("Priority", ["All", "Critical Only", "Non-Critical Only"])
     
     with col4:
-        if st.button("🚀 Auto-Send Drafted", help="Auto-send all non-critical drafted tickets"):
-            auto_send_drafted_tickets()
-    
-    st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("🚀 Auto-Send Drafted"):
+            auto_send_drafted()
     
     # Build params
     params = {}
@@ -791,214 +711,115 @@ def all_tickets_page():
         if response.status_code == 200:
             tickets = response.json()
             
-            st.markdown(f"**Found {len(tickets)} ticket(s)**")
+            st.write(f"**{len(tickets)} ticket(s) found**")
             
             if tickets:
-                st.markdown("<br>", unsafe_allow_html=True)
-                
-                # Display tickets with professional cards
                 for ticket in tickets:
-                    ticket_id = ticket["id"]
-                    subject = ticket["subject"]
-                    status = ticket["status"]
-                    is_critical = ticket.get("is_critical", False)
-                    
-                    # Professional status icons
-                    status_emoji = {
-                        "NEW": "🆕",
-                        "TRIAGED": "🔍",
-                        "DRAFTED": "✍️",
-                        "PENDING_APPROVAL": "⏳",
-                        "APPROVED": "✅",
-                        "SENT": "📤",
-                        "REJECTED": "❌"
-                    }.get(status, "📋")
-                    
-                    priority_icon = "🔴" if is_critical else "🟢"
-                    priority_text = "CRITICAL" if is_critical else "NORMAL"
+                    priority_icon = "🔴" if ticket.get("is_critical") else "🟢"
                     
                     with st.expander(
-                        f"{status_emoji} Ticket #{ticket_id} | {subject} | {priority_icon} {priority_text} | Status: {status}",
+                        f"{priority_icon} #{ticket['id']}: {ticket['subject']} | {ticket['status']}",
                         expanded=False
                     ):
-                        show_ticket_details(ticket_id)
-            else:
-                st.info("📭 No tickets found matching your filters")
+                        show_ticket_details(ticket["id"])
         
         else:
-            st.error("❌ Failed to load tickets")
+            st.error("Failed to load tickets")
     
-    except requests.exceptions.ConnectionError:
-        st.error("❌ Cannot connect to the backend server")
     except Exception as e:
-        st.error(f"❌ Error: {str(e)}")
+        st.error(f"Error: {str(e)}")
 
 
 def show_ticket_details(ticket_id):
-    """Show professional detailed ticket information"""
+    """Show ticket details"""
     try:
         response = requests.get(f"{BACKEND_URL}/tickets/{ticket_id}")
         if response.status_code != 200:
-            st.error("❌ Failed to load ticket details")
+            st.error("Failed to load ticket")
             return
         
         ticket = response.json()
         
-        # Professional ticket info layout
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("#### 📬 Original Ticket")
-            st.write(f"**From:** {ticket['submitter_name']}")
-            st.write(f"**Email:** {ticket['submitter_email']}")
-            st.write(f"**Subject:** {ticket['subject']}")
-            st.write(f"**Submitted:** {ticket['created_at']}")
+            st.markdown("**📬 Original Ticket**")
+            st.write(f"From: {ticket['submitter_name']} ({ticket['submitter_email']})")
+            st.write(f"Subject: {ticket['subject']}")
+            st.info(ticket['body'])
         
         with col2:
-            st.markdown("#### 🤖 ML Predictions")
-            st.write(f"**Department:** {ticket.get('predicted_queue', 'N/A')}")
-            st.write(f"**Confidence:** {ticket.get('queue_confidence', 0):.1%}")
-            st.write(f"**Criticality:** {ticket.get('critical_prob', 0):.1%}")
-            st.write(f"**Status:** {ticket['status']}")
+            st.markdown("**🤖 ML Analysis**")
+            st.write(f"Department: {ticket.get('predicted_queue', 'N/A')}")
+            st.write(f"Confidence: {ticket.get('queue_confidence', 0):.1%}")
+            st.write(f"Critical: {ticket.get('critical_prob', 0):.1%}")
+            st.write(f"Status: {ticket['status']}")
         
-        st.markdown("---")
-        st.markdown("#### 📝 Customer Message")
-        st.info(ticket['body'])
-        
-        # Show response
-        if ticket.get('responses') and len(ticket['responses']) > 0:
+        if ticket.get('responses'):
             st.markdown("---")
-            st.markdown("#### 📧 Support Response")
-            
-            for idx, resp in enumerate(ticket['responses'], 1):
-                col1, col2 = st.columns([4, 1])
-                with col1:
-                    st.write(f"**Subject:** {resp.get('draft_subject') or resp.get('final_subject', 'N/A')}")
-                with col2:
-                    confidence = resp.get('draft_confidence', 0)
-                    st.write(f"**AI Confidence:** {confidence:.0%}")
-                
-                # Response body
-                response_body = resp.get('final_body') or resp.get('draft_body')
-                if response_body:
-                    st.success(response_body)
-                else:
-                    st.warning("⚠️ No response body available")
-                
-                if resp.get('approved_at'):
-                    st.caption(f"✅ Approved and sent: {resp['approved_at']}")
-        else:
-            st.warning("⏳ Response is being generated...")
-        
-        # Approval history
-        if ticket.get('approvals') and len(ticket['approvals']) > 0:
-            st.markdown("---")
-            st.markdown("#### ✅ Approval History")
-            for approval in ticket['approvals']:
-                decision_color = "green" if approval['decision'] == "APPROVED" else "red"
-                st.markdown(f"**<span style='color: {decision_color};'>{approval['decision']}</span>** by **{approval['approver_name']}** at {approval['created_at']}", unsafe_allow_html=True)
-                if approval.get('decision_notes'):
-                    st.caption(f"📝 Notes: {approval['decision_notes']}")
+            st.markdown("**📧 Response**")
+            for resp in ticket['responses']:
+                body = resp.get('final_body') or resp.get('draft_body')
+                if body:
+                    st.success(body)
     
     except Exception as e:
-        st.error(f"❌ Error loading ticket details: {str(e)}")
+        st.error(f"Error: {str(e)}")
 
 
-def auto_send_drafted_tickets():
-    """Auto-send non-critical drafted tickets"""
+def auto_send_drafted():
+    """Auto-send drafted tickets"""
     try:
         response = requests.get(f"{BACKEND_URL}/tickets", params={"status": "DRAFTED"})
         
         if response.status_code != 200:
-            st.error("❌ Failed to get drafted tickets")
+            st.error("Failed to get drafted tickets")
             return
         
         tickets = response.json()
         
         if not tickets:
-            st.info("📭 No drafted tickets to send")
+            st.info("No drafted tickets")
             return
         
         success_count = 0
-        with st.spinner(f"📤 Sending {len(tickets)} drafted ticket(s)..."):
-            for ticket in tickets:
-                ticket_id = ticket["id"]
-                
-                approval_data = {
-                    "approver_name": "System Auto-Send",
-                    "approver_email": "system@company.com",
-                    "decision": "APPROVED",
-                    "decision_notes": "Auto-approved: Non-critical ticket"
-                }
-                
-                approve_response = requests.post(
-                    f"{BACKEND_URL}/tickets/{ticket_id}/approve",
-                    json=approval_data
-                )
-                
-                if approve_response.status_code == 200:
-                    success_count += 1
+        for ticket in tickets:
+            approval_data = {
+                "approver_name": "System",
+                "approver_email": "system@company.com",
+                "decision": "APPROVED",
+                "decision_notes": "Auto-approved"
+            }
+            
+            approve_response = requests.post(
+                f"{BACKEND_URL}/tickets/{ticket['id']}/approve",
+                json=approval_data
+            )
+            
+            if approve_response.status_code == 200:
+                success_count += 1
         
-        st.success(f"✅ Successfully sent {success_count}/{len(tickets)} drafted ticket(s)!")
-        st.balloons()
+        st.success(f"✅ Sent {success_count} ticket(s)!")
         st.rerun()
     
     except Exception as e:
-        st.error(f"❌ Error auto-sending: {str(e)}")
+        st.error(f"Error: {str(e)}")
 
 
 def analytics_page():
-    """Professional analytics page"""
-    st.markdown("### 📊 Advanced Analytics & Insights")
-    st.markdown("<br>", unsafe_allow_html=True)
+    """Analytics page"""
+    st.markdown("### 📈 Analytics")
     
-    # Create a professional "coming soon" page
-    col1, col2, col3 = st.columns([1, 2, 1])
+    st.info("🚧 Advanced analytics coming soon")
     
-    with col2:
-        st.markdown("""
-        <div style="text-align: center; padding: 3rem;">
-            <h1 style="font-size: 4rem; margin-bottom: 1rem;">🚧</h1>
-            <h2 style="color: #1e293b; margin-bottom: 1rem;">Advanced Analytics Coming Soon</h2>
-            <p style="color: #64748b; font-size: 1.1rem;">We're building powerful analytics features for you!</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    
-    # Feature roadmap
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("#### 🎯 Planned Features")
-        st.markdown("""
-        - **ML Model Performance**
-          - Department classification accuracy trends
-          - Criticality prediction calibration
-          - Confidence score distribution analysis
-        
-        - **Response Time Analytics**
-          - Average, median, P95 response times
-          - Response time by department
-          - SLA compliance tracking
-        """)
-    
-    with col2:
-        st.markdown("#### 📈 Future Insights")
-        st.markdown("""
-        - **Workload Analysis**
-          - Department ticket distribution
-          - Agent workload balancing
-          - Peak hours analysis
-        
-        - **Customer Satisfaction**
-          - Feedback sentiment analysis
-          - Resolution rate tracking
-          - Customer satisfaction scores
-        """)
-    
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    st.info("💡 These features will be available in the next release!")
+    st.markdown("""
+    **Planned Features:**
+    - ML model performance tracking
+    - Response time analytics
+    - Department workload analysis
+    - Customer satisfaction metrics
+    - Trend analysis and forecasting
+    """)
 
 
 if __name__ == "__main__":
