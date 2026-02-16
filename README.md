@@ -47,56 +47,68 @@ This system automates IT support ticket triage using:
 │                     IT TICKET TRIAGE SYSTEM                          │
 └─────────────────────────────────────────────────────────────────────┘
 
-┌──────────────────┐              ┌──────────────────────────────────┐
-│  Customer Portal │              │      Manager Dashboard           │
-│   (Streamlit)    │              │       (Streamlit)                │
-│   Port: 8501     │              │       Port: 8502                 │
-│                  │              │                                  │
-│  - Submit Ticket │              │  - View KPIs & Charts            │
-│  - Track Status  │              │  - Approve Critical Tickets      │
-│  - View Response │              │  - Edit Responses                │
-└────────┬─────────┘              └──────────────┬───────────────────┘
-         │                                       │
-         │                                       │
-         │         HTTP/REST API                 │
-         │                                       │
-         └───────────────┬───────────────────────┘
-                         │
-                         ▼
-         ┌───────────────────────────────────────────────┐
-         │         FastAPI Backend (Port: 8000)          │
-         │                                               │
-         │  ┌─────────────────────────────────────────┐ │
-         │  │         Triage Service                  │ │
-         │  │  1. Embed ticket text (Local BGE-M3)   │ │
-         │  │  2. Predict department (XGBoost)        │ │
-         │  │  3. Predict criticality (Logistic Reg)  │ │
-         │  │  4. Retrieve similar tickets (FAISS)    │ │
-         │  │  5. Generate draft (Gemini w/ RAG)      │ │
-         │  └─────────────────────────────────────────┘ │
-         │                                               │
-         │  ┌─────────────────────────────────────────┐ │
-         │  │       Approval Service                  │ │
-         │  │  - Manager approve/edit/reject          │ │
-         │  │  - Apply business rules                 │ │
-         │  │  - Send notification                    │ │
-         │  └─────────────────────────────────────────┘ │
-         └───────────────────┬───────────────────────────┘
-                             │
-                             ▼
-         ┌───────────────────────────────────────────────┐
-         │              Data Layer                       │
-         │                                               │
-         │  ┌──────────────┐  ┌─────────────────────┐   │
-         │  │ SQLite DB    │  │  ML Models & Index  │   │
-         │  │              │  │                     │   │
-         │  │ - Tickets    │  │ - dept_classifier  │   │
-         │  │ - Responses  │  │ - crit_classifier  │   │
-         │  │ - Approvals  │  │ - label_encoder    │   │
-         │  │ - Audit Logs │  │ - FAISS index      │   │
-         │  │              │  │ - Embeddings cache │   │
-         │  └──────────────┘  └─────────────────────┘   │
-         └───────────────────────────────────────────────┘
+┌──────────────────────────────────┐   ┌──────────────────────────────┐
+│   Next.js Frontend (Port: 3000)  │   │  Legacy Streamlit Dashboards │
+│                                  │   │  (Optional)                  │
+│  ┌────────────────────────────┐  │   │  - Customer: 8501            │
+│  │  Customer Portal (/)       │  │   │  - Manager:  8502            │
+│  │  - Submit Ticket           │  │   └──────────────────────────────┘
+│  │  - View Triage Results     │  │
+│  └────────────────────────────┘  │
+│                                  │
+│  ┌────────────────────────────┐  │
+│  │  Track Page (/track)       │  │
+│  │  - Search by Email         │  │
+│  │  - View Ticket Details     │  │
+│  │  - See Responses           │  │
+│  └────────────────────────────┘  │
+│                                  │
+│  ┌────────────────────────────┐  │
+│  │  Manager Dashboard         │  │
+│  │  (/manager)                │  │
+│  │  - View Pending Approvals  │  │
+│  │  - Approve/Reject Tickets  │  │
+│  │  - Edit Responses          │  │
+│  └────────────────────────────┘  │
+└────────────┬─────────────────────┘
+             │
+             │  HTTP/REST API
+             │
+             ▼
+┌───────────────────────────────────────────────┐
+│         FastAPI Backend (Port: 8000)          │
+│                                               │
+│  ┌─────────────────────────────────────────┐ │
+│  │         Triage Service                  │ │
+│  │  1. Embed ticket text (Local BGE-M3)   │ │
+│  │  2. Predict department (XGBoost)        │ │
+│  │  3. Predict criticality (Logistic Reg)  │ │
+│  │  4. Retrieve similar tickets (FAISS)    │ │
+│  │  5. Generate draft (Gemini w/ RAG)      │ │
+│  └─────────────────────────────────────────┘ │
+│                                               │
+│  ┌─────────────────────────────────────────┐ │
+│  │       Approval Service                  │ │
+│  │  - Manager approve/edit/reject          │ │
+│  │  - Apply business rules                 │ │
+│  │  - Send notification                    │ │
+│  └─────────────────────────────────────────┘ │
+└───────────────────┬───────────────────────────┘
+                    │
+                    ▼
+┌───────────────────────────────────────────────┐
+│              Data Layer                       │
+│                                               │
+│  ┌──────────────┐  ┌─────────────────────┐   │
+│  │ SQLite DB    │  │  ML Models & Index  │   │
+│  │              │  │                     │   │
+│  │ - Tickets    │  │ - dept_classifier  │   │
+│  │ - Responses  │  │ - crit_classifier  │   │
+│  │ - Approvals  │  │ - label_encoder    │   │
+│  │ - Audit Logs │  │ - FAISS index      │   │
+│  │              │  │ - Embeddings cache │   │
+│  └──────────────┘  └─────────────────────┘   │
+└───────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────┐
 │                    ML Pipeline (Offline)                             │
@@ -186,7 +198,15 @@ Manager → View Pending Critical Tickets
 - **ORM**: SQLAlchemy 2.0.35
 - **Validation**: Pydantic 2.9.2
 
-### Frontend
+### Frontend (Modern Stack)
+- **Framework**: Next.js 14.2.0 + React 18
+- **Language**: TypeScript 5
+- **Styling**: Tailwind CSS 3.4
+- **HTTP Client**: Axios
+- **Notifications**: React Hot Toast
+- **UI**: Modern glass morphism design with responsive layouts
+
+### Legacy Frontend (Optional)
 - **Framework**: Streamlit 1.39.0
 - **Charts**: Plotly, Altair
 - **UI**: Clean, responsive design
@@ -203,7 +223,8 @@ Manager → View Pending Critical Tickets
 ## 📦 Installation
 
 ### Prerequisites
-- Python 3.12+
+- **Python** 3.12+
+- **Node.js** 18+ and npm (for Next.js frontend)
 - 8GB RAM minimum (for embedding generation)
 - 2GB disk space
 
@@ -212,7 +233,7 @@ Manager → View Pending Critical Tickets
 cd d:\Capstone
 ```
 
-### Step 2: Install Dependencies
+### Step 2: Install Python Dependencies
 ```bash
 pip install -r requirements.txt
 ```
@@ -223,6 +244,14 @@ This installs all required packages (~2GB download):
 - sentence-transformers, FAISS
 - google-generativeai
 - And all dependencies
+
+### Step 3: Install Frontend Dependencies
+```bash
+cd frontend
+npm install
+```
+
+This installs Next.js, React, TypeScript, Tailwind CSS, and other frontend packages.
 
 ---
 
@@ -336,7 +365,24 @@ Index contains 28587 vectors
 
 ## 🚀 Running the System
 
-### Option 1: Individual Scripts (Recommended)
+### Option 1: Quick Start (All Services)
+
+**Start everything with one command:**
+```bash
+start_all.bat
+```
+
+This starts:
+- Backend API (http://localhost:8000)
+- Next.js Frontend with Manager Dashboard (http://localhost:3000)
+
+Access points:
+- **Customer Portal**: http://localhost:3000
+- **Track Tickets**: http://localhost:3000/track
+- **Manager Dashboard**: http://localhost:3000/manager
+- **API Documentation**: http://localhost:8000/docs
+
+### Option 2: Individual Scripts
 
 **Terminal 1 - Backend API:**
 ```bash
@@ -344,19 +390,25 @@ start_backend.bat
 ```
 Wait for: `Application startup complete` at http://localhost:8000
 
-**Terminal 2 - Customer Portal:**
+**Terminal 2 - Next.js Frontend:**
 ```bash
+cd frontend
+npm run dev
+```
+Opens at: http://localhost:3000 (or 3001 if 3000 is in use)
+
+**Optional - Legacy Streamlit Dashboards:**
+```bash
+# Customer Portal (Streamlit - Legacy)
 start_customer.bat
-```
-Opens at: http://localhost:8501
+# Opens at: http://localhost:8501
 
-**Terminal 3 - Manager Dashboard:**
-```bash
-start_manager.bat
+# Manager Dashboard (Streamlit - Legacy)
+start_streamlit_dashboard.bat
+# Opens at: http://localhost:8502
 ```
-Opens at: http://localhost:8502
 
-### Option 2: Manual Start
+### Option 3: Manual Start
 
 **Backend:**
 ```bash
@@ -365,13 +417,18 @@ set PYTHONPATH=D:\Capstone
 uvicorn backend.app:app --host 0.0.0.0 --port 8000
 ```
 
-**Customer Portal:**
+**Next.js Frontend:**
 ```bash
-streamlit run customer_portal/streamlit_app.py --server.port 8501
+cd D:\Capstone\frontend
+npm run dev
 ```
 
-**Manager Dashboard:**
+**Legacy Streamlit (Optional):**
 ```bash
+# Customer Portal
+streamlit run customer_portal/streamlit_app.py --server.port 8501
+
+# Manager Dashboard
 streamlit run manager_dashboard/streamlit_dashboard.py --server.port 8502
 ```
 
@@ -381,16 +438,15 @@ streamlit run manager_dashboard/streamlit_dashboard.py --server.port 8502
 
 ### 1. Submit a Ticket (Customer)
 
-1. Open **Customer Portal**: http://localhost:8501
+1. Open **Customer Portal**: http://localhost:3000
 2. Fill in form:
    - Name: `John Doe`
    - Email: `john@company.com`
    - Subject: `Cannot access VPN`
    - Body: `I'm getting error 403 when trying to connect to company VPN from home`
-   - Attachment: (optional)
 3. Click **Submit Ticket**
 4. Note the **Ticket ID** (e.g., `#123`)
-5. View status updates in real-time
+5. View automatic triage results (department, priority, status)
 
 ### 2. Automatic Triage (Backend)
 
@@ -404,34 +460,45 @@ System automatically:
    - If critical (high priority) → **PENDING_APPROVAL**
    - If non-critical → Auto-send (or pending based on config)
 
-### 3. Manager Approval (Manager Dashboard)
+### 3. Track a Ticket (Customer)
 
-1. Open **Manager Dashboard**: http://localhost:8502
-2. Login with password: `admin123`
-3. Navigate to **"Pending Critical Approvals"** tab
-4. See list of tickets awaiting approval
-5. Click on ticket to view:
-   - Original ticket text
-   - ML predictions (department, criticality %)
-   - Similar past tickets (context)
-   - Gemini draft response (JSON)
-6. Actions:
+1. Open **Track Page**: http://localhost:3000/track
+2. Enter your email address
+3. View all your tickets with:
+   - Current status
+   - Assigned department
+   - Priority level
+   - AI-generated responses (if approved)
+   - Timeline updates
+
+### 4. Manager Approval (Manager Dashboard)
+
+1. Open **Manager Dashboard**: http://localhost:3000/manager
+2. See pending approvals with stats dashboard
+3. Click **"Review & Approve"** on any ticket
+4. Review modal shows:
+   - Customer's original message
+   - AI-generated response draft
+   - ML analysis (department, confidence, criticality)
+5. Actions:
    - ✅ **Approve & Send** - Send draft as-is
-   - ✏️ **Edit Response** - Modify then send
-   - ❌ **Reject** - Request more info or reassign
+   - ✏️ **Edit Response** - Modify subject/body then approve
+   - ❌ **Reject** - Request revision with reason
+6. Real-time toast notifications confirm actions
 
-### 4. View Analytics
+### 5. View Analytics
 
-**KPI Dashboard:**
-- Total tickets, open count, critical count
-- Avg response time
+**Manager Dashboard Features:**
+- Pending approvals count
+- Stats cards with key metrics
+- Color-coded priority indicators (🔴 critical, 🟢 normal)
+- Time since submission tracking
+- Full ticket history
+
+**Legacy Streamlit Dashboard (Optional):**
+- KPI charts and graphs
 - Tickets by department (pie chart)
 - Tickets over time (line chart)
-- Critical rate trend
-
-**All Tickets Table:**
-- Filter by queue, priority, status, date
-- Search functionality
 - Export to CSV
 
 ---

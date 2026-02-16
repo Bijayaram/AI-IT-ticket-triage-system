@@ -254,12 +254,18 @@ export default function HomePage() {
         </div>
 
         {/* Track Link */}
-        <div className="text-center mt-8">
+        <div className="text-center mt-8 space-y-3">
           <button
             onClick={() => router.push('/track')}
-            className="text-white text-lg hover:text-yellow-300 transition-colors font-semibold"
+            className="text-white text-lg hover:text-yellow-300 transition-colors font-semibold block mx-auto"
           >
             Already have a ticket? Track it here →
+          </button>
+          <button
+            onClick={() => router.push('/manager')}
+            className="text-white/80 text-sm hover:text-yellow-300 transition-colors font-semibold block mx-auto"
+          >
+            🛡️ Manager Dashboard (Admin)
           </button>
         </div>
       </div>

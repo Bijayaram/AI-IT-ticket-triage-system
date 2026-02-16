@@ -124,6 +124,9 @@ class TriageService:
                     )
                     db.add(response)
                     
+                    # Copy detected language to ticket for ML analysis display
+                    ticket.predicted_language = draft_result.get("language")
+                    
                     needs_approval = draft_result.get("needs_human_approval", True)
                     draft_generated = True
                     
