@@ -266,61 +266,66 @@ export default function TrackPage() {
               {/* Response */}
               {selectedTicket.responses && selectedTicket.responses.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-green-500" />
-                    Response from Support Team
-                  </h3>
+                  {selectedTicket.responses.map((response, idx) => {
+                    // Only show response if it's been approved (has final_body)
+                    const isApproved = !!response.final_body;
+                    
+                    if (isApproved) {
+                      // Show approved response
+                      return (
+                        <div key={idx}>
+                          <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                            <CheckCircle2 className="w-5 h-5 text-green-500" />
+                            Response from Support Team
+                          </h3>
+                          <div className="mb-4 bg-green-50 border-l-4 border-green-500 rounded-lg p-4">
+                            {response.final_subject && (
+                              <h4 className="font-semibold text-gray-900 mb-2">
+                                {response.final_subject}
+                              </h4>
+                            )}
 
-                  {selectedTicket.responses.map((response, idx) => (
-                    <div key={idx} className="mb-4">
-                      {response.final_body || response.draft_body ? (
-                        <div
-                          className={`${
-                            response.final_body
-                              ? 'bg-green-50 border-l-4 border-green-500'
-                              : 'bg-yellow-50 border-l-4 border-yellow-500'
-                          } rounded-lg p-4`}
-                        >
-                          {response.final_subject || response.draft_subject ? (
-                            <h4 className="font-semibold text-gray-900 mb-2">
-                              {response.final_subject || response.draft_subject}
-                            </h4>
-                          ) : null}
+                            <p className="text-gray-700 whitespace-pre-wrap">
+                              {response.final_body}
+                            </p>
 
-                          <p className="text-gray-700 whitespace-pre-wrap">
-                            {response.final_body || response.draft_body}
-                          </p>
-
-                          {!response.final_body && response.needs_human_approval && (
-                            <div className="mt-3 flex items-center gap-2 text-sm text-yellow-700">
-                              <AlertCircle className="w-4 h-4" />
-                              <span>Response pending manager approval</span>
-                            </div>
-                          )}
-
-                          {response.approved_at && (
-                            <div className="mt-3 text-sm text-gray-600">
-                              ✅ Sent on{' '}
-                              {new Date(response.approved_at).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="bg-gray-50 border-l-4 border-gray-300 rounded-lg p-4">
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-                            <span>Response is being prepared...</span>
+                            {response.approved_at && (
+                              <div className="mt-3 text-sm text-gray-600">
+                                ✅ Sent on{' '}
+                                {new Date(response.approved_at).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </div>
+                            )}
                           </div>
                         </div>
-                      )}
-                    </div>
-                  ))}
+                      );
+                    } else {
+                      // Response exists but not approved - show under review message
+                      return (
+                        <div key={idx}>
+                          <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                            <Clock className="w-5 h-5 text-orange-500" />
+                            Response Status
+                          </h3>
+                          <div className="bg-orange-50 border-l-4 border-orange-500 rounded-lg p-4">
+                            <div className="flex items-center gap-2 text-orange-700 mb-2">
+                              <AlertCircle className="w-5 h-5" />
+                              <span className="font-semibold">Under Review</span>
+                            </div>
+                            <p className="text-gray-700">
+                              Our support team has drafted a response and it is currently under review by a manager. 
+                              You will receive the response once it has been approved. Thank you for your patience!
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    }
+                  })}
                 </div>
               )}
 
@@ -338,7 +343,7 @@ export default function TrackPage() {
         )}
 
         {/* Empty State */}
-        {!loading && tickets.length === 0 && email && (
+        {!loading && tickets.length === 0 && email && email.includes('@') && email.includes('.') && (
           <div className="glass rounded-3xl p-12 text-center">
             <div className="text-6xl mb-4">📭</div>
             <h3 className="text-2xl font-bold text-gray-900 mb-2">No Tickets Found</h3>
@@ -355,12 +360,18 @@ export default function TrackPage() {
         )}
 
         {/* Back Home Link */}
-        <div className="text-center mt-8">
+        <div className="text-center mt-8 space-y-3">
           <button
             onClick={() => (window.location.href = '/')}
-            className="text-white text-lg hover:text-yellow-300 transition-colors font-semibold"
+            className="text-white text-lg hover:text-yellow-300 transition-colors font-semibold block mx-auto"
           >
             ← Back to Submit Ticket
+          </button>
+          <button
+            onClick={() => (window.location.href = '/manager')}
+            className="text-white/80 text-sm hover:text-yellow-300 transition-colors font-semibold block mx-auto"
+          >
+            🛡️ Manager Dashboard (Admin)
           </button>
         </div>
       </div>

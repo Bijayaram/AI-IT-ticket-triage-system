@@ -8,6 +8,7 @@ import pandas as pd
 from pathlib import Path
 from typing import Dict, Any, Optional
 import logging
+import json
 
 from backend.ml.embeddings import get_embedder
 
@@ -28,7 +29,9 @@ class TicketPredictor:
         self.dept_classifier = None
         self.critical_classifier = None
         self.label_encoder = None  # For XGBoost int -> string conversion
-        self.use_enhanced_features = False  # Whether model uses enhanced features (disabled - hurt performance)
+        # Use embeddings-only features for the final baseline.
+        self.use_enhanced_features = False
+        self.critical_threshold = 0.5
         self.loaded = False
     
     def create_handcrafted_features(self, text: str) -> np.ndarray:
@@ -83,6 +86,7 @@ class TicketPredictor:
         dept_path = self.MODEL_DIR / "department_classifier.joblib"
         crit_path = self.MODEL_DIR / "criticality_classifier.joblib"
         encoder_path = self.MODEL_DIR / "label_encoder.joblib"
+        threshold_path = self.MODEL_DIR / "critical_threshold.json"
         
         if not dept_path.exists() or not crit_path.exists():
             raise FileNotFoundError(
@@ -97,6 +101,17 @@ class TicketPredictor:
         if encoder_path.exists():
             self.label_encoder = joblib.load(encoder_path)
             logger.info("✓ Label encoder loaded")
+
+        # Optional tuned threshold for criticality
+        if threshold_path.exists():
+            try:
+                data = json.loads(threshold_path.read_text(encoding="utf-8"))
+                t = float(data.get("critical_threshold", 0.5))
+                if 0.0 < t < 1.0:
+                    self.critical_threshold = t
+                    logger.info(f"✓ Criticality threshold loaded: {self.critical_threshold:.2f}")
+            except Exception as e:
+                logger.warning(f"Failed to load criticality threshold: {e}. Using 0.5")
         
         self.loaded = True
         logger.info("✓ Models loaded successfully")
@@ -156,7 +171,7 @@ class TicketPredictor:
         
         # Predict criticality
         critical_prob = float(self.critical_classifier.predict_proba(embedding_2d)[0, 1])
-        is_critical = critical_prob >= 0.5
+        is_critical = critical_prob >= self.critical_threshold
         
         return {
             "predicted_queue": dept_pred,

@@ -84,9 +84,19 @@ class TicketClassifierTrainer:
         
         # Filter out rows with missing queue or text
         self.df = self.df[self.df['queue'].notna() & self.df['text'].notna()].copy()
+
+        # Apply queue consolidation (improved labels) to reduce overlap
+        queue_mapping = {
+            "General Inquiry": "Customer Service",
+            "Human Resources": "Customer Service",
+            "IT Support": "Technical Support",
+            "Returns and Exchanges": "Product Support",
+            "Sales and Pre-Sales": "Product Support",
+        }
+        self.df["queue"] = self.df["queue"].replace(queue_mapping)
         
         logger.info(f"✓ Loaded {len(self.df)} valid tickets")
-        logger.info(f"  - Queues: {self.df['queue'].nunique()} unique")
+        logger.info(f"  - Queues (after consolidation): {self.df['queue'].nunique()} unique")
         logger.info(f"  - Critical tickets: {self.df['is_critical'].sum()} ({self.df['is_critical'].mean()*100:.1f}%)")
         logger.info(f"  - Languages: {self.df['language'].unique()}")
         
@@ -478,7 +488,9 @@ class TicketClassifierTrainer:
         """Run full training pipeline"""
         self.load_and_prepare_data()
         self.generate_embeddings()
-        self.split_data()
+        # Use embeddings-only features for the final baseline
+        # with improved / consolidated queue labels.
+        self.split_data(use_enhanced_features=False)
         
         dept_metrics = self.train_department_classifier()
         crit_metrics = self.train_criticality_classifier()

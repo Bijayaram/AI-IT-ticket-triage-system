@@ -46,3 +46,38 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Test & debug scripts
+test_*.py
+insert_test_data.py
+scripts/test_system.py
+fix_*.py
+add_response_manual.py
+
+# Analysis & experiment artifacts
+ml_eval_output/
+ml_model_comparison/
+Dataset/
+*.docx
+comprehensive_ticket_analysis.py
+evaluate_models*.py
+model_comparison_visualizations.py
+tune_critical_threshold.py
+build_pre_embedding_dataset.py
+analysis_requirements.txt
+run_analysis.bat
+cleanup_analysis_files.bat
+
+# Internal notes & one-off docs
+ANALYSIS_*.md
+ML_ANALYSIS_FIX.md
+ML_EVALUATION_*.md
+FIX_*.md
+TICKET1_*.md
+REFLECTION_*.md
+DATA_REFLECTION_*.md
+START_SCRIPTS_UPDATE.md
+MANAGER_DASHBOARD_MIGRATION.md
+MANAGER_DASHBOARD_ENHANCEMENTS.md
+EMBEDDING_EXPERIMENT_REPORT.md
+MODELING_AND_EVALUATION_REPORT.md
