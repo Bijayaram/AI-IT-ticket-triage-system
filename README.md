@@ -44,7 +44,7 @@ This system automates IT support ticket triage using:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                     IT TICKET TRIAGE SYSTEM                          │
+│                     IT TICKET TRIAGE SYSTEM                         │
 └─────────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────┐   ┌──────────────────────────────┐
@@ -75,25 +75,25 @@ This system automates IT support ticket triage using:
              │  HTTP/REST API
              │
              ▼
-┌───────────────────────────────────────────────┐
-│         FastAPI Backend (Port: 8000)          │
-│                                               │
+┌──────────────────────────────────────────────┐
+│         FastAPI Backend (Port: 8000)         │
+│                                              │
 │  ┌─────────────────────────────────────────┐ │
 │  │         Triage Service                  │ │
-│  │  1. Embed ticket text (Local BGE-M3)   │ │
+│  │  1. Embed ticket text (Local BGE-M3)    │ │
 │  │  2. Predict department (XGBoost)        │ │
 │  │  3. Predict criticality (Logistic Reg)  │ │
 │  │  4. Retrieve similar tickets (FAISS)    │ │
 │  │  5. Generate draft (Gemini w/ RAG)      │ │
 │  └─────────────────────────────────────────┘ │
-│                                               │
+│                                              │
 │  ┌─────────────────────────────────────────┐ │
 │  │       Approval Service                  │ │
 │  │  - Manager approve/edit/reject          │ │
 │  │  - Apply business rules                 │ │
 │  │  - Send notification                    │ │
 │  └─────────────────────────────────────────┘ │
-└───────────────────┬───────────────────────────┘
+└───────────────────┬──────────────────────────┘
                     │
                     ▼
 ┌───────────────────────────────────────────────┐
